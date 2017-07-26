@@ -13,6 +13,7 @@
 #import <iflyMSC/iflyMSC.h>
 #import "ISRDataHelper.h"
 #import "ReviseViewController.h"
+#import "NSMutableArray+NotNull.h"
 
 @interface ViewController ()<UITableViewDelegate,UITableViewDataSource,IFlySpeechRecognizerDelegate>
 
@@ -27,6 +28,8 @@
 @property (nonatomic, strong) IFlySpeechRecognizer      *iFlySpeechRecognizer;
 @property (nonatomic, strong) NSMutableString           *curResult;//the results of current session
 @property (nonatomic, strong) UILabel                   *resultLabel;
+@property (nonatomic, assign) NSString                  *lockOrNot;
+@property (nonatomic, strong) UIButton                  *lockBtn;
 
 @end
 
@@ -56,9 +59,13 @@
  */
 -(NSMutableArray *)classArr
 {
+    NSString *fileName = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents/groupData.plist"];
+    NSLog(@"%@",fileName);
+    _classArr = [NSMutableArray arrayWithContentsOfFile:fileName];
     if (!_classArr)
     {
         _classArr = [[NSMutableArray alloc] initWithObjects:@"常用",@"私密", nil];
+        [_classArr writeToFile:fileName atomically:YES];
     }
     return _classArr;
 }
@@ -136,6 +143,7 @@
 {
     NSString *fileName = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents/data.plist"];
     self.plistDic = [[NSMutableDictionary alloc] initWithContentsOfFile:fileName];
+    NSLog(@"%@",self.plistDic);
     if (self.plistDic.count==0)
     {
         NSString *plistPath = [[NSBundle mainBundle] pathForResource:@"Account" ofType:@"plist"];
@@ -166,12 +174,34 @@
     }]];
     
     [alertController addAction:[UIAlertAction actionWithTitle:@"添加分组" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-        [self setAlertView:@"添加分组"];
+        [self addGrouping];
     }]];
     
     [self presentViewController:alertController animated:YES completion:nil];
 }
-
+-(void)addGrouping
+{
+    UIAlertController *groupAlert = [UIAlertController alertControllerWithTitle:@"添加分组" message:nil preferredStyle:UIAlertControllerStyleAlert];
+    [groupAlert addAction:[UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        NSString *groupName = [groupAlert textFields][0].text;
+        if (groupName.length>0)
+        {
+            [self.classArr addObject:groupName];
+            NSString *fileName = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents/groupData.plist"];
+            [_classArr writeToFile:fileName atomically:YES];
+            [self.chooseStatusArr addObject:@"0"];
+            [self.plistDic setObject:[NSDictionary new] forKey:groupName];
+            [self dataWriteToDocuments];
+            self.plistAllKeysArr = [self.plistDic allKeys];
+        }
+        NSLog(@"%ld",self.classArr.count);
+        [self.accountTabelView reloadData];
+    }]];
+    [groupAlert addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
+        
+    }];
+    [self presentViewController:groupAlert animated:YES completion:nil];
+}
 /**
  创建添加账号密码的alert
  
@@ -186,6 +216,7 @@
     [alertController addAction:[UIAlertAction actionWithTitle:add style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         NSMutableDictionary *accountDic = [NSMutableDictionary new];
         [accountDic setObject:[[alertController.textFields objectAtIndex:2] text]forKey:[[alertController.textFields objectAtIndex:1] text]];
+        NSLog(@"%@",_currentStr);
         NSMutableDictionary *dic = [self.plistDic objectForKey:_currentStr];
         [dic setObject:accountDic forKey:[[alertController.textFields objectAtIndex:0] text]];
         [self.plistDic setObject:dic forKey:_currentStr];
@@ -242,28 +273,58 @@
     }];
     [self presentViewController:accountAlert animated:YES completion:nil];
 }
+-(BOOL)haveQuestion
+{
+    NSString *question = [UserDefaults objectForKey:@"question"];
+    NSString *answer = [UserDefaults objectForKey:@"answer"];
+    BOOL exit = question.length>0&&answer.length>0?YES:NO;
+    return exit;
+}
 -(void)setQuestionAlert
 {
-    UIAlertController *questionAlert = [UIAlertController alertControllerWithTitle:@"添加密保问题" message:nil preferredStyle:UIAlertControllerStyleAlert];
+    
+    NSString *alertStr = nil;
+    if ([self haveQuestion]) {
+        alertStr = @"请输入问题答案";
+    }else
+    {
+        alertStr = @"添加密保问题";
+    }
+    UIAlertController *questionAlert = [UIAlertController alertControllerWithTitle:alertStr message:nil preferredStyle:UIAlertControllerStyleAlert];
     [questionAlert addAction:[UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-        self.answerStr = [[[questionAlert textFields] objectAtIndex:1] text];
-        self.questionStr = [[[questionAlert textFields] objectAtIndex:0] text];
-        BOOL  right = self.answerStr.length>0&&self.questionStr.length>0?YES:NO;
-        if (right)
+        if ([self haveQuestion])
         {
-            [UserDefaults setObject:self.answerStr forKey:@"answer"];
-            [UserDefaults setObject:self.questionStr forKey:@"question"];
-            [UserDefaults synchronize];
+            self.answerStr = [questionAlert textFields][1].text;
+            if ([self.answerStr isEqualToString:[UserDefaults objectForKey:@"answer"]]) {
+                _lockOrNot = @"1";
+                [self.lockBtn setImage:SetImg(@"unlock") forState:UIControlStateNormal];
+                [UserDefaults setObject:_lockOrNot forKey:@"lock"];
+            }else
+            {
+                kHUDNormal(@"你输入的答案错误，请重新输入！")
+            }
         }else
         {
-            kHUDNormal(@"您输入的问题不全，请重新输入");
+            self.answerStr = [[[questionAlert textFields] objectAtIndex:1] text];
+            self.questionStr = [[[questionAlert textFields] objectAtIndex:0] text];
+            BOOL  right = self.answerStr.length>0&&self.questionStr.length>0?YES:NO;
+            if (right)
+            {
+                [UserDefaults setObject:self.answerStr forKey:@"answer"];
+                [UserDefaults setObject:self.questionStr forKey:@"question"];
+                [UserDefaults synchronize];
+            }else
+            {
+                kHUDNormal(@"您输入的问题不全，请重新输入");
+            }
         }
+        
         
     }]];
     [questionAlert addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
         if ([[UserDefaults objectForKey:@"question"] length]>0)
         {
-            textField.placeholder = [UserDefaults objectForKey:@"question"];
+            textField.text = [UserDefaults objectForKey:@"question"];
         }else
         {
             textField.placeholder = @"请输入问题";
@@ -284,7 +345,11 @@
 {
     if (sender.tag==2)
     {
-        [self setQuestionAlert];
+        if (![[UserDefaults objectForKey:@"lock"] isEqualToString:@"1"])
+        {
+            [self setQuestionAlert];
+            return;
+        }
     }
     NSArray *childClassArr = [[self.plistDic objectForKey:[self.classArr objectAtIndex:sender.tag-1]] allKeys];
     if ([childClassArr count]==0)
@@ -294,6 +359,7 @@
     }
     NSString *chooes = [self.chooseStatusArr objectAtIndex:sender.tag-1];
     _currentStr = [self.plistAllKeysArr objectAtIndex:sender.tag-1];
+    NSLog(@"%@",_currentStr);
     if (chooes.intValue==0)
     {
         chooes = @"1";
@@ -314,9 +380,36 @@
 -(void)addAccountBtnClick:(UIButton *)sender
 {
     _currentStr = [self.plistAllKeysArr objectAtIndex:sender.tag-100];
+    NSLog(@"%@",_currentStr);
+   if(sender.tag==101)
+    {
+        if (![self haveQuestion]||[[UserDefaults objectForKey:@"lock"] isEqualToString:@"0"])
+        {
+            [self setQuestionAlert];
+            return;
+        }
+    }
     [self setAlertView:@"添加账号"];
 }
 
+/**
+ 该方法来控制用户是否需要每次都输入密保问题
+
+ @param sender 按钮
+ */
+-(void)lockBtnClick:(UIButton *)sender
+{
+    if ([[UserDefaults objectForKey:@"lock"] isEqualToString:@"1"])
+    {
+        _lockOrNot = @"0";
+        [sender setImage:SetImg(@"lock") forState:UIControlStateNormal];
+    }else
+    {
+        _lockOrNot = @"1";
+        [sender setImage:SetImg(@"unlock") forState:UIControlStateNormal];
+    }
+    [UserDefaults setObject:_lockOrNot forKey:@"lock"];
+}
 #pragma mark
 #pragma mark tableviewDelegate
 -(UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
@@ -338,10 +431,29 @@
     [btn addTarget:self action:@selector(sectionBtnClick:) forControlEvents:UIControlEventTouchUpInside];
     [btn mas_makeConstraints:^(MASConstraintMaker *make) {
         make.top.equalTo(headerView).with.offset(0);
-        make.right.equalTo(headerView).with.offset(-50);
+        make.right.equalTo(headerView).with.offset(-80);
         make.bottom.equalTo(headerView).with.offset(0);
         make.left.equalTo(headerView).with.offset(0);
     }];
+    if (section==1)
+    {
+        self.lockBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        [self.lockBtn addTarget:self action:@selector(lockBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+        [headerView addSubview:self.lockBtn];
+        [self.lockBtn mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.top.equalTo(headerView).with.offset(0);
+            make.left.equalTo(btn.mas_right).with.offset(0);
+            make.bottom.equalTo(headerView).with.offset(0);
+            make.right.equalTo(headerView).with.offset(-50);
+        }];
+        if (![[UserDefaults objectForKey:@"lock"] isEqualToString:@"1"])
+        {
+            [self.lockBtn setImage:SetImg(@"lock") forState:UIControlStateNormal];
+        }else
+        {
+            [self.lockBtn setImage:SetImg(@"unlock") forState:UIControlStateNormal];
+        }
+    }
     UIButton *addAccountBtn = [UIButton buttonWithType:UIButtonTypeCustom];
     [addAccountBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
     addAccountBtn.titleLabel.font = [UIFont systemFontOfSize:12];
@@ -353,7 +465,7 @@
         make.top.equalTo(headerView).with.offset(0);
         make.right.equalTo(headerView).with.offset(0);
         make.bottom.equalTo(headerView).with.offset(0);
-        make.left.equalTo(btn.mas_right).with.offset(0);
+        make.left.equalTo(btn.mas_right).with.offset(30);
     }];
     UIView *lineView = [UIView new];
     lineView.backgroundColor = [UIColor grayColor];
@@ -429,6 +541,10 @@
         NSLog(@"%ld,%ld",indexPath.row,indexPath.section);
     }
 }
+
+
+
+
 #pragma mark
 #pragma mark 讯飞delegate
 -(void)onResults:(NSArray *)results isLast:(BOOL)isLast

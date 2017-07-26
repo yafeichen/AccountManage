@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9C8DDCEA1F287F5B0037FD04 /* NSMutableArray+NotNull.m in Sources */ = {isa = PBXBuildFile; fileRef = 9C8DDCE91F287F5B0037FD04 /* NSMutableArray+NotNull.m */; };
 		9CB910101F1F40CE008DE8F3 /* ReviseViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9CB9100F1F1F40CE008DE8F3 /* ReviseViewController.m */; };
 		9CB910121F1F54AE008DE8F3 /* Account.plist in Resources */ = {isa = PBXBuildFile; fileRef = 9CB910111F1F54AE008DE8F3 /* Account.plist */; };
 		9CCC94131F1CA33B008DB3C0 /* iflyMSC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9CCC94121F1CA33B008DB3C0 /* iflyMSC.framework */; };
@@ -63,6 +64,8 @@
 		05980A2B36B81E3DDDC109D5 /* Pods-Account.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Account.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Account/Pods-Account.debug.xcconfig"; sourceTree = "<group>"; };
 		4A4E69816AF3EA5392AA94F3 /* libPods-Account.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Account.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		80ECAB412CB870121B65A8BD /* Pods-Account.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Account.release.xcconfig"; path = "Pods/Target Support Files/Pods-Account/Pods-Account.release.xcconfig"; sourceTree = "<group>"; };
+		9C8DDCE81F287F5B0037FD04 /* NSMutableArray+NotNull.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSMutableArray+NotNull.h"; sourceTree = "<group>"; };
+		9C8DDCE91F287F5B0037FD04 /* NSMutableArray+NotNull.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSMutableArray+NotNull.m"; sourceTree = "<group>"; };
 		9CB9100E1F1F40CE008DE8F3 /* ReviseViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ReviseViewController.h; sourceTree = "<group>"; };
 		9CB9100F1F1F40CE008DE8F3 /* ReviseViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReviseViewController.m; sourceTree = "<group>"; };
 		9CB910111F1F54AE008DE8F3 /* Account.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Account.plist; sourceTree = "<group>"; };
@@ -200,6 +203,8 @@
 				9CFE4C701F162A5F008CEA0C /* ViewController.m */,
 				9CB9100E1F1F40CE008DE8F3 /* ReviseViewController.h */,
 				9CB9100F1F1F40CE008DE8F3 /* ReviseViewController.m */,
+				9C8DDCE81F287F5B0037FD04 /* NSMutableArray+NotNull.h */,
+				9C8DDCE91F287F5B0037FD04 /* NSMutableArray+NotNull.m */,
 				9CB910111F1F54AE008DE8F3 /* Account.plist */,
 			);
 			path = classes;
@@ -529,6 +534,7 @@
 				9CFE4C6E1F162A5F008CEA0C /* AppDelegate.m in Sources */,
 				9CCC942D1F1CA359008DB3C0 /* json_writer.cpp in Sources */,
 				9CB910101F1F40CE008DE8F3 /* ReviseViewController.m in Sources */,
+				9C8DDCEA1F287F5B0037FD04 /* NSMutableArray+NotNull.m in Sources */,
 				9CFE4C6B1F162A5F008CEA0C /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
