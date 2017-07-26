@@ -539,10 +539,23 @@
         CGPoint point = [longPre locationInView:self.accountTabelView];
         NSIndexPath *indexPath = [self.accountTabelView indexPathForRowAtPoint:point];
         NSLog(@"%ld,%ld",indexPath.row,indexPath.section);
+        [self removeDataAlert:(int)indexPath.section witchData:(int)indexPath.row];
     }
 }
 
-
+-(void)removeDataAlert:(int)section witchData:(int)row
+{
+    UIAlertController *removeAlert = [UIAlertController alertControllerWithTitle:@"提示" message:@"确定要删除改账号吗？" preferredStyle:UIAlertControllerStyleAlert];
+    [removeAlert addAction:[UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        
+    }]];
+    [removeAlert addAction:[UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        NSMutableDictionary *sectionDic = [self.plistDic objectForKey:self.classArr[section]];
+        [sectionDic removeObjectForKey:[sectionDic allKeys][row]];
+        [self dataWriteToDocuments];
+    }]];
+    [self presentViewController:removeAlert animated:YES completion:nil];
+}
 
 
 #pragma mark
